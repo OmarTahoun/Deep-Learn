@@ -5,17 +5,18 @@ def sigmoid(z):
     return A, z
 
 def relu(z):
-    A = np.maximum(o, z)
+    A = np.maximum(0, z)
     return A, z
 
 def relu_backward(dA, cache):
+    Z = cache
     dZ = np.array(dA, copy = True)
-    dZ[cache <= 0] = 0
+    dZ[Z <= 0] = 0
 
     return dZ
 
 def sigmoid_backward(dA, cache):
-    s = sigmoid(cache)
+    s = 1/(1+np.exp(-cache))
     dZ = dA * s * (1-s)
 
     return dZ

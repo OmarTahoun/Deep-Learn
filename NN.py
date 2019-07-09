@@ -6,16 +6,15 @@ def parameters_initialize(layers_size):
     L = len(layers_size)
 
     for l in range(1, L):
-        parameters["W"+str(l)] = np.random.randn(layers_size[l], layers_size[l-1]) * 0.01
+        parameters["W"+str(l)] = np.random.randn(layers_size[l], layers_size[l-1]) * np.sqrt(2/layers_size[l-1])
         parameters["b"+str(l)] = np.zeros((layers_size[l], 1))
 
     return parameters
 
 
 def forward_linear(A, W, b):
-    Z = np.dot(W, A) + b
+    Z = W.dot(A) + b
     cache = (A, W, b)
-
     return Z, cache
 
 def forward_activation(A_prev, W, b, activation="relu"):
@@ -37,18 +36,19 @@ def forward_probagation(X, parameters):
 
     for l in range(1, L):
         A_prev = A
-
-        A, cache = forward_activation(A, parameters["W"+str(l)], parameters['b'+str(l)])
+        A, cache = forward_activation(A_prev, parameters["W"+str(l)], parameters['b'+str(l)])
         caches.append(cache)
 
     A_final, cache = forward_activation(A, parameters["W"+str(L)], parameters['b'+str(L)], activation="sigmoid")
     caches.append(cache)
 
+    return A_final, caches
+
 
 def calculate_cost(A_final, Y):
     m = Y.shape[1]
 
-    cost = (-1 / m) * np.sum((Y * np.log(A_final)) + (1-Y * np.log(1-A_final)))
+    cost = (1./m) * (-np.dot(Y,np.log(A_final).T) - np.dot(1-Y, np.log(1-A_final).T))
     cost = np.squeeze(cost)
 
     return cost
@@ -59,7 +59,7 @@ def backward_linear(dZ, cache):
     m = A_prev.shape[1]
 
     dW = (1/m) * np.dot(dZ, A_prev.T)
-    db = (1/m) * np.dot(dZ, axis=1, keepdims=True)
+    db = (1/m) * np.sum(dZ, axis=1, keepdims=True)
     dA_prev = np.dot(W.T, dZ)
 
     return dA_prev, dW, db
@@ -80,16 +80,19 @@ def backwars_probagation(A_final, Y, caches):
     grads = {}
     L = len(caches)
     m = A_final.shape[1]
-    Y = Y.reshape(A_final)
+    Y = Y.reshape(A_final.shape)
 
     dA_final = - (np.divide(Y, A_final) - np.divide(1 - Y, 1 - A_final))
 
-    current_cache = caches[-1]
+    current_cache = caches[L-1]
     grads["dA"+str(L-1)], grads["dW"+str(L)],  grads["db"+str(L)] = backward_activation(dA_final, current_cache, activation="sigmoid")
 
-    for l in raversed(range(L-1)):
+    for l in reversed(range(L-1)):
         current_cache = caches[l]
-        grads["dA"+str(l)], grads["dW"+str(l+)],  grads["db"+str(l+1)] = backward_activation(dA_final, current_cache)
+        dA_prev_temp, dW_temp, db_temp = backward_activation(grads["dA" + str(l + 1)], current_cache)
+        grads["dA" + str(l)] = dA_prev_temp
+        grads["dW" + str(l + 1)] = dW_temp
+        grads["db" + str(l + 1)] = db_temp
 
     return grads
 
@@ -106,11 +109,10 @@ def parameters_update(parameters, grads, learning_rate):
 
 def model(X, Y, layers_size, learning_rate = 0.0075, iterations = 3000, print_cost = False):
     costs = []
-
     parameters = parameters_initialize(layers_size)
 
-    for i in range(iterations):
-        A_final, caches = forward_probagation(X, parameters)
+    for i in range(0, iterations):
+        A_final , caches = forward_probagation(X, parameters)
         cost = calculate_cost(A_final, Y)
 
         grads = backwars_probagation(A_final, Y, caches)
