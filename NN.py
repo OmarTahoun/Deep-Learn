@@ -76,7 +76,7 @@ def backward_activation(dA, cache, activation = "relu"):
 
     return dA_prev, dW, db
 
-def backwars_probagation(A_final, Y, caches):
+def backward_probagation(A_final, Y, caches):
     grads = {}
     L = len(caches)
     m = A_final.shape[1]
@@ -115,7 +115,7 @@ def model(X, Y, layers_size, learning_rate = 0.0075, iterations = 3000, print_co
         A_final , caches = forward_probagation(X, parameters)
         cost = calculate_cost(A_final, Y)
 
-        grads = backwars_probagation(A_final, Y, caches)
+        grads = backward_probagation(A_final, Y, caches)
         parameters = parameters_update(parameters, grads, learning_rate)
 
         if print_cost and i%100 == 0:
@@ -129,19 +129,3 @@ def model(X, Y, layers_size, learning_rate = 0.0075, iterations = 3000, print_co
     plt.show()
 
     return parameters
-
-def predict(X, y, parameters):
-    m = X.shape[1]
-    L = len(parameters) // 2
-    p = np.zeros((1,m))
-
-    preds, caches = forward_probagation(X, parameters)
-
-    for i in range(preds.shape[1]):
-        if preds[0,i] > 0.5:
-            p[0,i] = 1
-        else:
-            p[0,i] = 0
-
-    print("Accuracy: "+ str(np.sum((p==y)/m)))
-    return p
