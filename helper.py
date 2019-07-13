@@ -63,34 +63,3 @@ def sigmoid_backward(dA, cache):
     dZ = dA * s * (1-s)
 
     return dZ
-
-
-def predict(X, y, parameters):
-    """
-    Predicts the result of L-layer deep neural network
-
-    Args:
-            X           -- dataset samples to be labeled
-            y           -- True labels of the samples
-            parameters  -- parameters of a trained model
-
-    Return: p           -- predictions for the dataset X
-    """
-
-    m = X.shape[1]
-    L = len(parameters) // 2 # The number of layers in the network
-    p = np.zeros((1,m))
-
-    # Forward probagation
-    preds, caches = forward_probagation(X, parameters)
-
-    # converting the probabilitis to 0/1 predictions
-    for i in range(preds.shape[1]):
-        if preds[0,i] > 0.5:
-            p[0,i] = 1
-        else:
-            p[0,i] = 0
-
-    # Print the Accuracy of this model on the given dataset
-    print("Accuracy: "+ str(np.sum((p==y)/m)))
-    return p
